@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # 数据库配置
-    DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/teacher备课系统"
+    DATABASE_URL: str = "sqlite:///./teacher备课系统.db"
     
     # JWT配置
     SECRET_KEY: str = "your-secret-key"

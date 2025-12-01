@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
+from app.models.user import User
 
 # 密码哈希上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -58,20 +59,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     if payload is None:
         raise credentials_exception
     
-    user_id: int = payload.get("sub")
+    user_id: str = payload.get("sub")
     if user_id is None:
         raise credentials_exception
     
-    # 这里应该从数据库中获取用户，暂时返回模拟数据
-    # user = db.query(User).filter(User.id == user_id).first()
-    # if user is None:
-    #     raise credentials_exception
+    # 从数据库中获取用户
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise credentials_exception
     
-    # 模拟用户数据
-    mock_user = {
-        "id": user_id,
-        "username": "mock_user",
-        "email": "mock@example.com"
-    }
-    
-    return mock_user
+    return user
