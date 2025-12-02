@@ -12,9 +12,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./teacher备课系统.db"
     
     # JWT配置
-    SECRET_KEY: str = "your-secret-key"
+    SECRET_KEY: str = "secretkey"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000
     
     # CORS配置
     CORS_ORIGINS: List[str] = ["*"]

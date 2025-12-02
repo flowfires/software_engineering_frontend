@@ -5,20 +5,20 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     """用户基础模型"""
-    username: str = Field(..., min_length=3, max_length=50, description="用户名")
+    username: str = Field(..., min_length=3, max_length=50, description="用户名（3-50个字符）")
     email: EmailStr = Field(..., description="邮箱")
-    full_name: Optional[str] = Field(None, max_length=100, description="真实姓名")
+    full_name: Optional[str] = Field(None, max_length=100, description="真实姓名(可选，最大100个字符)")
 
 
 class UserCreate(UserBase):
     """用户创建模型（注册用）"""
-    password: str = Field(..., min_length=6, max_length=50, description="密码")
+    password: str = Field(..., min_length=6, max_length=50, description="密码（6-50个字符）")
 
 
 class UserLogin(BaseModel):
     """用户登录模型"""
-    username: str = Field(..., description="用户名")
-    password: str = Field(..., description="密码")
+    username: str = Field(..., description="用户名（3-50个字符）")
+    password: str = Field(..., description="密码（6-50个字符）")
 
 
 class UserResponse(UserBase):

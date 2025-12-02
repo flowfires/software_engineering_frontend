@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import auth, teacher, course, lesson, resource, question, log, ai
 from app.core.config import settings
+from app.core.exception_handler import register_exception_handlers
 
 app = FastAPI(
     title="AI辅助教师备课系统",
@@ -11,6 +12,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+# 注册异常处理器
+register_exception_handlers(app)
 
 # 配置CORS
 app.add_middleware(

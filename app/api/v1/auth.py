@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from typing import Dict
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.core.security import get_password_hash, verify_password, create_access_token, get_current_active_user, get_current_user_with_role
 from app.models.user import User
 from app.schema.user import UserCreate, UserResponse
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -26,10 +26,16 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="邮箱已存在"
         )
-    
-    # 哈希密码
-    hashed_password = get_password_hash(user_data.password)
-    
+
+    try:
+        # 哈希密码
+        hashed_password = get_password_hash(str(user_data.password))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="密码哈希失败"
+        )
+
     # 创建用户
     db_user = User(
         username=user_data.username,
@@ -37,13 +43,18 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
         password_hash=hashed_password,
         full_name=user_data.full_name
     )
-    
-    # 保存到数据库
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    return db_user
+
+    try:
+        # 保存到数据库
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": "数据库操作失败"}
+        )
+    return UserResponse.model_validate(db_user)
 
 
 @router.post("/login")
@@ -80,3 +91,21 @@ async def logout():
 async def refresh_token():
     """刷新Token"""
     return {"access_token": "mock-refreshed-token", "token_type": "bearer"}
+
+
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    """获取当前用户信息（需要认证）"""
+    return current_user
+
+
+@router.get("/test/teacher")
+async def test_teacher_role(current_user: User = Depends(lambda: get_current_user_with_role("teacher"))):
+    """测试教师角色访问（需要教师角色）"""
+    return {"message": f"Welcome, teacher {current_user.username}!", "user_id": current_user.id}
+
+
+@router.get("/test/admin")
+async def test_admin_role(current_user: User = Depends(lambda: get_current_user_with_role("admin"))):
+    """测试管理员角色访问（需要管理员角色）"""
+    return {"message": f"Welcome, admin {current_user.username}!", "user_id": current_user.id}
