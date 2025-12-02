@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 
 from app.api.v1 import auth, teacher, course, lesson, resource, question, log, ai
 from app.core.config import settings
@@ -14,6 +15,11 @@ app = FastAPI(
 )
 # 注册异常处理器
 register_exception_handlers(app)
+#
+# security_scheme = HTTPBearer(
+#     # 可选：指定描述，会在文档中显示
+#     description="JWT 认证：请输入 'Bearer <YOUR_TOKEN>' 格式的 Token"
+# )
 
 # 配置CORS
 app.add_middleware(

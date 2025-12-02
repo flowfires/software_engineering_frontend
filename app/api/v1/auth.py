@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, get_current_active_user, get_current_user_with_role
 from app.models.user import User
@@ -77,7 +79,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "expires_in": 30 * 60  # 30分钟，单位：秒
+        "expires_in": str(settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60)  # 单位：秒
     }
 
 
@@ -95,7 +97,7 @@ async def refresh_token():
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    """获取当前用户信息（需要认证）"""
+    """测试获取当前用户信息（需要认证）"""
     return current_user
 
 

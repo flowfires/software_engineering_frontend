@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # JWT配置
     SECRET_KEY: str = "secretkey"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS配置
     CORS_ORIGINS: List[str] = ["*"]
