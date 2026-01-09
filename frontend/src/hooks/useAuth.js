@@ -13,9 +13,16 @@ export function useAuth() {
 
     const resp = await api.post('/auth/login', params)
     const { access_token: t } = resp.data
-    const u = { username: credentials.username }
     setAuthToken(t)
-    setAuth(t, u)
+    // try fetch full profile from backend; if it fails, fall back to provided username
+    try {
+      const profileResp = await api.get('/auth/profile')
+      const u = profileResp.data || { username: credentials.username }
+      setAuth(t, u)
+    } catch (e) {
+      // if profile fetch fails, still set the auth with submitted username
+      setAuth(t, { username: credentials.username })
+    }
     return resp
   }, [setAuth])
 

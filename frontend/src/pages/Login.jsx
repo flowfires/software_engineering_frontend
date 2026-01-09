@@ -2,8 +2,7 @@ import React from 'react'
 import { Form, Input, Button, Card, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import useAuthStore from '../stores/authStore'
-import { setAuthToken } from '../services/api'
+import useAuthStore from '../stores/authStore' 
 
 export default function Login() {
   const navigate = useNavigate()
@@ -37,30 +36,6 @@ export default function Login() {
           <div style={{ textAlign: 'center', marginBottom: 8 }}>
             还没有账号？ <a onClick={() => navigate('/register')}>立即注册</a>
           </div>
-          {import.meta.env.DEV && (
-            <Form.Item>
-              <Button
-                block
-                onClick={() => {
-                  // 开发时的临时后门，直接注入 token（仅本次会话，不持久化）
-                  const mockToken = 'dev-token'
-                  const mockUser = { username: 'dev' }
-                  setAuthToken(mockToken)
-                  useAuthStore.getState().setAuth(mockToken, mockUser)
-                  // mark this as a dev session so App will skip token verification
-                  useAuthStore.getState().setDevSession(true)
-                  // remove persisted storage so it doesn't auto-login after refresh
-                  try {
-                    localStorage.removeItem('auth-storage')
-                  } catch (e) {}
-                  message.success('开发后门：已登录（session）')
-                  navigate('/')
-                }}
-              >
-                开发后门登录
-              </Button>
-            </Form.Item>
-          )}
         </Form>
       </Card>
     </div>

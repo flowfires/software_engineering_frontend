@@ -13,9 +13,8 @@ export default function Profile() {
     async function load() {
       setLoading(true)
       try {
-        const resp = await api.get('/teacher/profile')
+        const resp = await api.get('/auth/profile')
         if (!mounted) return
-        // backend currently returns placeholder; handle both shapes
         if (resp.data && resp.data.message && Object.keys(resp.data).length === 1) {
           setData({ message: resp.data.message })
         } else {
@@ -55,7 +54,7 @@ export default function Profile() {
           )}
         </Skeleton>
         <div style={{ marginTop: 12 }}>
-          <Button type="primary" disabled>编辑信息（待实现）</Button>
+          <Button type="primary" disabled>编辑信息</Button>
         </div>
       </Card>
     </div>

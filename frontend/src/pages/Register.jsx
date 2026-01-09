@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 export default function Register() {
   const navigate = useNavigate()
   const { register } = useAuth()
-
+ 
   const onFinish = async (values) => {
     if (values.password !== values.confirmPassword) {
       message.error('两次输入的密码不一致')
