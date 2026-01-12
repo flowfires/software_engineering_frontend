@@ -12,30 +12,32 @@ export default function Lessons() {
   const [filters, setFilters] = useState({ subject: null, grade: null })
 
   const load = async (page = 1, filterParams = filters) => {
-    setLoading(true)
-    try {
-      const params = { page, page_size: pagination.pageSize }
-      if (filterParams.subject) params.subject = filterParams.subject
-      if (filterParams.grade) params.grade = filterParams.grade
-      
-      const resp = await api.get('/lesson/list', { params })
-      if (resp.data && Array.isArray(resp.data.items || resp.data)) {
-        setData(resp.data.items || resp.data)
-        setPagination(prev => ({
-          ...prev,
-          page,
-          total: resp.data.total || (resp.data.items || resp.data).length
-        }))
-      } else {
-        setData([])
-      }
-    } catch (err) {
-      message.error('获取教案列表失败')
+  setLoading(true)
+  try {
+    const params = { page, page_size: pagination.pageSize }
+    if (filterParams.subject) params.subject = filterParams.subject
+    if (filterParams.grade) params.grade = filterParams.grade
+    
+    const resp = await api.get('/lesson/list', { params })
+    const listData = resp.data.lessons || (Array.isArray(resp.data) ? resp.data : [])
+    
+    if (Array.isArray(listData)) {
+      setData(listData)
+      setPagination(prev => ({
+        ...prev,
+        page,
+        total: resp.data.total || listData.length
+      }))
+    } else {
       setData([])
-    } finally {
-      setLoading(false)
     }
+  } catch (err) {
+    message.error('获取教案列表失败')
+    setData([])
+  } finally {
+    setLoading(false)
   }
+}
 
   const handleDelete = async (id, title) => {
     Modal.confirm({
@@ -91,6 +93,12 @@ export default function Lessons() {
               <Select.Option value="四年级">四年级</Select.Option>
               <Select.Option value="五年级">五年级</Select.Option>
               <Select.Option value="六年级">六年级</Select.Option>
+              <Select.Option value="七年级">七年级</Select.Option>
+              <Select.Option value="八年级">八年级</Select.Option>
+              <Select.Option value="九年级">九年级</Select.Option>
+              <Select.Option value="高一">高一</Select.Option>
+              <Select.Option value="高二">高二</Select.Option>
+              <Select.Option value="高三">高三</Select.Option>
             </Select>
           </Space>
           <Space>

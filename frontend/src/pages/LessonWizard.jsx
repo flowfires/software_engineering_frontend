@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Steps, Button, Input, Select, message, Card, Modal, Form, InputNumber, List, Spin } from 'antd'
+import { RobotOutlined, ThunderboltOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
@@ -155,12 +156,16 @@ export default function LessonWizard() {
     
     try {
       const clarifyData = {
-        ...basicInfo,
-        template_id: selectedTemplate?.id,
-        session_id: sessionId
+        ...basicInfo
       }
       
-      const resp = await api.post('/ai/lesson/generate', { clarify: clarifyData })
+      const payload = {
+        session_id: sessionId,
+        clarify: clarifyData,
+        template_id: selectedTemplate?.id
+      }
+
+      const resp = await api.post('/ai/lesson/generate', payload)
       
       if (resp.data?.task_id) {
         setTaskId(resp.data.task_id)

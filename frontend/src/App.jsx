@@ -23,6 +23,8 @@ import Exercises from './pages/Exercises' // 列表页
 import ExerciseGenerator from './pages/ExerciseGenerator' // 生成页
 import ExerciseEditor from './pages/ExerciseEditor' // 编辑页
 import LearningProfiles from './pages/LearningProfiles'
+import ImageGeneration from './pages/ImageGeneration';
+import VideoGeneration from './pages/VideoGeneration';
 
 
 import ProtectedRoute from './components/ProtectedRoute'
@@ -153,6 +155,8 @@ export default function App() {
           <Route path="/learning-profiles" element={<ProtectedRoute><LearningProfiles /></ProtectedRoute>} />
           
           <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
+          <Route path="/resources/image" element={<ProtectedRoute><ImageGeneration /></ProtectedRoute>} />
+          <Route path="/resources/video" element={<ProtectedRoute><VideoGeneration /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />

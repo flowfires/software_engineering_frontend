@@ -39,10 +39,28 @@ export default function LessonEditor() {
           lesson_count: r.data?.lesson_count || 1,
           notes: r.data?.notes || ''
         })
-        const contentStr = r.data?.content 
-          ? (typeof r.data.content === 'string' ? r.data.content : JSON.stringify(r.data.content, null, 2))
-          : ''
-        setContent(contentStr)
+
+        // 🔥【核心修改】智能解析内容显示
+        let contentDisplay = '';
+        const rawContent = r.data?.content;
+
+        if (rawContent) {
+          if (typeof rawContent === 'string') {
+             // 如果本身就是字符串，直接显示
+             contentDisplay = rawContent;
+          } else if (typeof rawContent === 'object') {
+             // 如果是对象，且只有 text 字段，说明是纯文本包装，直接拆包显示内容！
+             // 这样 \n 就会渲染成真正的换行，而不是显示字符 "\n"
+             if (rawContent.text && Object.keys(rawContent).length === 1) {
+               contentDisplay = rawContent.text; 
+             } else {
+               // 如果是复杂的 JSON（比如包含 image_url 等其他字段），还是显示 JSON 源码以便编辑
+               contentDisplay = JSON.stringify(rawContent, null, 2);
+             }
+          }
+        }
+        setContent(contentDisplay)
+
       }).catch(err => {
         message.error('加载教案失败')
       })
@@ -50,50 +68,60 @@ export default function LessonEditor() {
   }, [id])
 
   const save = async () => {
-    setSaving(true)
+  // 1. 必填项校验
+  if (!lessonData.lesson_title.trim()) {
+    message.warning('请输入教案标题')
+    return
+  }
+
+  setSaving(true)
+  try {
+    let contentObj
     try {
-      let contentObj
-      try {
-        contentObj = JSON.parse(content)
-      } catch {
-        contentObj = { text: content }
+      contentObj = typeof content === 'string' ? JSON.parse(content) : content
+    } catch {
+      contentObj = { text: content }
+    }
+
+    // 构造请求数据
+    const payload = { 
+      ...lessonData,
+      content: contentObj 
+    }
+
+    // 判断是新建还是更新
+    // 注意：这里加了防呆判断，如果 id 是字符串 "undefined"，视为新建
+    if (id === 'new' || !id || id === 'undefined') {
+      // === 新建模式 (POST) ===
+      const resp = await api.post('/lesson', payload)
+      message.success('已创建')
+      
+      // 🔥 核心修复：多层级查找 ID，防止跳转到 undefined
+      // 依次尝试：resp.data.id, resp.data.lesson.id, resp.data.data.id
+      const newId = resp.data?.id || resp.data?.lesson?.id || resp.data?.data?.id
+      
+      console.log('创建返回结果:', resp.data, '解析出的ID:', newId)
+
+      if (newId) {
+        navigate(`/lessons/${newId}`, { replace: true })
+      } else {
+        console.warn('创建成功但未获取到ID，返回列表页')
+        navigate('/lessons')
       }
 
-      if (id === 'new' || !id) {
-        if (!lessonData.lesson_title.trim()) {
-          message.warning('请输入教案标题')
-          setSaving(false)
-          return
-        }
-        const resp = await api.post('/lesson', { 
-          ...lessonData,
-          content: contentObj 
-        })
-        message.success('已创建')
-        navigate(`/lessons/${resp.data.id}`)
-      } else {
-        await api.put(`/lesson/${id}`, { 
-          ...lessonData,
-          content: contentObj 
-        })
-        message.success('已保存')
-      }
-    } catch (err) {
-      console.error('保存失败详情:', err)
-      const errorMsg = err?.response?.data?.detail 
-        || err?.response?.data?.message
-        || err?.message 
-        || '保存失败'
-      message.error(`保存失败: ${errorMsg}`)
-      
-      // 如果是422错误，显示验证详情
-      if (err?.response?.status === 422 && err?.response?.data?.detail) {
-        console.error('验证错误详情:', err.response.data.detail)
-      }
-    } finally {
-      setSaving(false)
+    } else {
+      // === 更新模式 (PUT) ===
+      await api.put(`/lesson/${id}`, payload)
+      message.success('已保存')
     }
+  } catch (err) {
+    console.error('保存失败详情:', err)
+    const errorMsg = err?.response?.data?.detail || '保存失败'
+    message.error(`保存失败: ${errorMsg}`)
+  } finally {
+    setSaving(false)
   }
+}
 
   const pollGenerationStatus = async (tid) => {
     try {

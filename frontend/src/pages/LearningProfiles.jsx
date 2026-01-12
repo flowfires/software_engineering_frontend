@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button, List, message, Spin, Empty, Modal, Form, Input, Select, Tag, Row, Col, Typography, Tabs, InputNumber, Descriptions, Divider } from 'antd'
 import { PlusOutlined, RobotOutlined, MinusCircleOutlined } from '@ant-design/icons'
+import ReactMarkdown from 'react-markdown'
 import api from '../services/api'
 // 引入新拆分的组件
 import LearningProfileCard from '../components/LearningProfileCard'
@@ -351,6 +352,7 @@ export default function LearningProfiles() {
             {
               key: '1',
               label: '基本信息',
+              forceRender: true,
               children: (
                 <>
                   <Form.Item name="title" label="档案名称" rules={[{ required: true }]}>
@@ -377,6 +379,7 @@ export default function LearningProfiles() {
             {
               key: '2',
               label: '能力分布',
+              forceRender: true,
               children: (
                 <>
                   <Form.Item name="overall_level" label="整体水平">
@@ -410,6 +413,7 @@ export default function LearningProfiles() {
             {
               key: '3',
               label: '学习行为',
+              forceRender: true,
               children: (
                 <Row gutter={16}>
                   <Col span={12}>
@@ -438,6 +442,7 @@ export default function LearningProfiles() {
             {
               key: '4',
               label: '知识体系',
+              forceRender: true,
               children: (
                 <>
                   <Form.Item label="已掌握的前置知识">
@@ -459,7 +464,7 @@ export default function LearningProfiles() {
         </Form>
       </Modal>
 
-      {/* AI 分析弹窗 (保持不变) */}
+      {/* AI 分析弹窗 */}
       <Modal
         title={<span><RobotOutlined style={{ color: '#1890ff', marginRight: 8 }} />智能学情诊断</span>}
         open={analyzeModalVisible}
@@ -472,18 +477,51 @@ export default function LearningProfiles() {
           <div style={{ marginBottom: 8, fontWeight: 500 }}>分析内容：</div>
           <TextArea rows={5} value={analyzeText} onChange={e => setAnalyzeText(e.target.value)} />
         </div>
+        
         <Button type="primary" block onClick={async () => {
-             setAnalyzing(true); setAnalyzeResult(null);
+             setAnalyzing(true); 
+             setAnalyzeResult(null);
              try {
                 const r = await api.get('/ai/lps/analyze', { params: { msg: analyzeText } })
-                setAnalyzeResult(r.data)
+                
+                // 【修改点 1】精准提取 content 字段
+                // 如果后端返回结构变化，保留兜底逻辑 (r.data)
+                const aiContent = r.data?.content || r.data;
+                
+                // 确保是字符串，如果是对象则转字符串防止报错
+                setAnalyzeResult(typeof aiContent === 'string' ? aiContent : JSON.stringify(aiContent));
              } catch(e) {
-                // 如果后端还没好，提示一下
                 message.error('智能分析服务连接失败，请稍后重试')
-                setAnalyzing(false)
-             } finally { if(!analyzeResult) setAnalyzing(false) }
+             } finally { 
+                setAnalyzing(false) 
+             }
         }} loading={analyzing}>开始分析</Button>
-        {analyzeResult && <div style={{ marginTop: 16, padding: 16, background: '#f5f5f5' }}><pre style={{ whiteSpace: 'pre-wrap' }}>{typeof analyzeResult==='object'?JSON.stringify(analyzeResult,null,2):analyzeResult}</pre></div>}
+
+        {analyzeResult && (
+          <div style={{ 
+            marginTop: 16, 
+            padding: '16px 24px', // 增加左右内边距
+            background: '#f9f9f9', // 稍微柔和一点的背景色
+            borderRadius: 8, 
+            border: '1px solid #e8e8e8', // 增加边框增加层次感
+            maxHeight: 500, 
+            overflowY: 'auto',
+            lineHeight: '1.8', // 增加行高，提升阅读体验
+            color: '#333'
+          }}>
+            <ReactMarkdown 
+              components={{
+                // 自定义一些样式，防止 Markdown 默认样式被 AntD 覆盖或太丑
+                h3: ({node, ...props}) => <h3 style={{ color: '#1890ff', marginTop: '1em', marginBottom: '0.5em' }} {...props} />,
+                ul: ({node, ...props}) => <ul style={{ paddingLeft: 20 }} {...props} />,
+                li: ({node, ...props}) => <li style={{ marginBottom: 4 }} {...props} />,
+                strong: ({node, ...props}) => <strong style={{ color: '#000', fontWeight: 600 }} {...props} />
+              }}
+            >
+              {analyzeResult}
+            </ReactMarkdown>
+          </div>
+        )}
       </Modal>
     </div>
   )

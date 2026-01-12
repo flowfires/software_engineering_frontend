@@ -13,15 +13,19 @@ export function useAuth() {
 
     const resp = await api.post('/auth/login', params)
     const { access_token: t } = resp.data
+    
+    // 【关键】先更新 zustand store，再设置请求头（确保拦截器能读到）
+    setAuth(t, { username: credentials.username })
     setAuthToken(t)
+    
     // try fetch full profile from backend; if it fails, fall back to provided username
     try {
       const profileResp = await api.get('/auth/profile')
       const u = profileResp.data || { username: credentials.username }
-      setAuth(t, u)
+      setAuth(t, u)  // 更新为完整的用户信息
     } catch (e) {
-      // if profile fetch fails, still set the auth with submitted username
-      setAuth(t, { username: credentials.username })
+      console.warn('获取用户信息失败:', e)
+      // profile fetch fails, keep the basic auth
     }
     return resp
   }, [setAuth])
