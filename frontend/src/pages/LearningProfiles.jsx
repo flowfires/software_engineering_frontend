@@ -36,37 +36,7 @@ export default function LearningProfiles() {
       const list = Array.isArray(resp.data) ? resp.data : (resp.data.items || [])
       setData(list)
     } catch (err) {
-      console.warn('后端不可用，加载示例数据')
-      setData([
-        {
-          id: 'mock-1',
-          title: '高一(3)班 数学学情 (示例)',
-          profile: {
-            scope: { subject: '数学', grade: '高一', class_name: '高一(3)班' },
-            overall_learning_level: { overall_level: '薄弱', strong_ratio: '10%', average_ratio: '40%', weak_ratio: '50%' },
-            learning_behavior: { 
-              class_participation: '活跃但易跑题', 
-              homework_completion: '抄袭现象严重',
-              calculation_skill: '弱',
-              conceptual_understanding: '一般'
-            },
-            common_mistakes: [
-               { knowledge_point: '三角函数诱导公式' },
-               { knowledge_point: '向量数量积' }
-            ],
-            prior_knowledge: {
-               mastered_knowledge_points: ['初中代数', '平面几何基础'],
-               partially_mastered_knowledge_points: ['二次函数']
-            },
-            teaching_suggestions: ['每日计算打卡', '建立帮扶小组'],
-            remarks: '这是一个示例卡片。点击可查看更多细节。'
-          }
-        }
-      ])
-      if (!window.hasShownMockMsg) {
-        message.warning({ content: '后端未连接，已加载演示数据', key: 'mock-msg' })
-        window.hasShownMockMsg = true
-      }
+      console.warn('后端不可用')
     } finally {
       setLoading(false)
     }

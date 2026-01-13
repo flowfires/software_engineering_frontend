@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Card, List, message, Spin, Empty, Modal, Select, Input, Space } from 'antd'
+import { Button, Card, List, message, Spin, Empty, Modal, Select, Input, Space, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 
 const { Search } = Input
+const { Title, Text } = Typography
 
 export default function Lessons() {
   const [loading, setLoading] = useState(false)
@@ -69,7 +70,14 @@ export default function Lessons() {
   }, [])
 
   return (
-    <div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <Title level={2} style={{ marginBottom: 0 }}>教案管理</Title>
+          <Text type="secondary">管理教案与 AI 教案生成，便捷备课</Text>
+        </div>
+      </div>
+
       <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>

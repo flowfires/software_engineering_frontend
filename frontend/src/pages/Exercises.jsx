@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Card, List, message, Spin, Empty, Modal, Select, Input, Space, Tag } from 'antd'
+import { Button, Card, List, message, Spin, Empty, Modal, Select, Input, Space, Tag, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { PlusOutlined, EditOutlined, DeleteOutlined, FormOutlined } from '@ant-design/icons'
 import api from '../services/api'
+
+const { Title, Text } = Typography
 
 export default function Exercises() {
   const navigate = useNavigate()
@@ -10,6 +12,35 @@ export default function Exercises() {
   const [data, setData] = useState([])
   const [pagination, setPagination] = useState({ page: 1, pageSize: 20, total: 0 })
   const [filters, setFilters] = useState({ subject: null, difficulty: null })
+
+  // 兼容后端不同返回格式，安全获取题目数量
+  const getExerciseCount = (item) => {
+    if (!item) return 0
+    // 首先优先使用完整数组
+    if (Array.isArray(item.exercises)) return item.exercises.length
+    if (Array.isArray(item.items)) return item.items.length
+    if (Array.isArray(item.questions)) return item.questions.length
+
+    // 常见的计数字段
+    const numFields = [
+      'exercise_count', 'exercises_count', 'exerciseCount', 'exercisesCount',
+      'total_exercises', 'total_questions', 'count', 'questions_count', 'question_count'
+    ]
+    for (const k of numFields) {
+      if (typeof item[k] === 'number') return item[k]
+      if (typeof item[k] === 'string' && item[k] !== '' && !isNaN(Number(item[k]))) return Number(item[k])
+    }
+
+    // 如果某些字段是 JSON 字符串，尝试解析
+    const tryParse = (v) => {
+      if (typeof v !== 'string') return null
+      try { return JSON.parse(v) } catch (e) { return null }
+    }
+    const parsed = tryParse(item.exercises) || tryParse(item.items) || tryParse(item.data)
+    if (Array.isArray(parsed)) return parsed.length
+
+    return 0
+  }
 
   const load = async (page = 1, filterParams = filters) => {
     setLoading(true)
@@ -69,6 +100,13 @@ export default function Exercises() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <Title level={2} style={{ marginBottom: 0 }}>习题管理</Title>
+          <Text type="secondary">创建与管理题库，支持 AI 智能出题</Text>
+        </div>
+      </div>
+
       <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
@@ -135,7 +173,7 @@ export default function Exercises() {
                   <div style={{ minHeight: 60 }}>
                     <div style={{ marginBottom: 8 }}>
                       <FormOutlined style={{ marginRight: 6, color: '#1890ff' }} />
-                      <span style={{ fontWeight: 500 }}>{item.exercises ? item.exercises.length : 0} 道题</span>
+                      <span style={{ fontWeight: 500 }}>{getExerciseCount(item)} 道题</span>
                       {item.suggested_duration_minutes && (
                         <span style={{ marginLeft: 16, color: '#666' }}>
                           ⏱ {item.suggested_duration_minutes} 分钟
