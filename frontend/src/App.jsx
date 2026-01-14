@@ -41,6 +41,10 @@ function AppLayout({ children }) {
     token: { colorBgContainer },
   } = theme.useToken()
 
+  // 兼容用户信息中可能包含 avatar_base64 而非 avatar_url
+  const avatarSrc = user?.avatar_url || (user?.avatar_base64 ? (user.avatar_base64.startsWith('data:') ? user.avatar_base64 : `data:image/jpeg;base64,${user.avatar_base64}`) : undefined)
+  console.log('[App] current user avatarSrc:', avatarSrc)
+
   const menuItems = [
     {
       key: '/lessons',
@@ -115,7 +119,7 @@ function AppLayout({ children }) {
         <Header style={{ padding: '0 24px', background: colorBgContainer, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Dropdown menu={userMenu}>
             <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar icon={<UserOutlined />} src={user?.avatar_url} />
+              <Avatar icon={<UserOutlined />} src={avatarSrc} />
               <span style={{ fontWeight: 500 }}>{user?.full_name || user?.username || '教师'}</span>
             </div>
           </Dropdown>

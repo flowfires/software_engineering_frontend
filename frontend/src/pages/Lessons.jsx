@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Card, List, message, Spin, Empty, Modal, Select, Input, Space, Typography } from 'antd'
 import { Link } from 'react-router-dom'
+import { PlusOutlined } from '@ant-design/icons'
 import api from '../services/api'
 
-const { Search } = Input
 const { Title, Text } = Typography
 
 export default function Lessons() {
@@ -13,32 +13,33 @@ export default function Lessons() {
   const [filters, setFilters] = useState({ subject: null, grade: null })
 
   const load = async (page = 1, filterParams = filters) => {
-  setLoading(true)
-  try {
-    const params = { page, page_size: pagination.pageSize }
-    if (filterParams.subject) params.subject = filterParams.subject
-    if (filterParams.grade) params.grade = filterParams.grade
-    
-    const resp = await api.get('/lesson/list', { params })
-    const listData = resp.data.lessons || (Array.isArray(resp.data) ? resp.data : [])
-    
-    if (Array.isArray(listData)) {
-      setData(listData)
-      setPagination(prev => ({
-        ...prev,
-        page,
-        total: resp.data.total || listData.length
-      }))
-    } else {
+    setLoading(true)
+    try {
+      const params = { page, page_size: pagination.pageSize }
+      if (filterParams.subject) params.subject = filterParams.subject
+      if (filterParams.grade) params.grade = filterParams.grade
+      
+      const resp = await api.get('/lesson/list', { params })
+      const listData = resp.data.lessons || (Array.isArray(resp.data) ? resp.data : [])
+      
+      if (Array.isArray(listData)) {
+        setData(listData)
+        setPagination(prev => ({
+          ...prev,
+          page,
+          total: resp.data.total || listData.length
+        }))
+      } else {
+        setData([])
+      }
+    } catch (err) {
+      console.error(err)
+      message.error('获取教案列表失败')
       setData([])
+    } finally {
+      setLoading(false)
     }
-  } catch (err) {
-    message.error('获取教案列表失败')
-    setData([])
-  } finally {
-    setLoading(false)
   }
-}
 
   const handleDelete = async (id, title) => {
     Modal.confirm({
@@ -110,7 +111,7 @@ export default function Lessons() {
             </Select>
           </Space>
           <Space>
-            <Button type="primary">
+            <Button type="primary" icon={<PlusOutlined />}>
               <Link to="/lessons/wizard">AI生成教案</Link>
             </Button>
             <Button>
@@ -131,7 +132,7 @@ export default function Lessons() {
               current: pagination.page,
               pageSize: pagination.pageSize,
               total: pagination.total,
-              onChange: load,
+              onChange: (p) => load(p),
               showTotal: (total) => `共 ${total} 条`
             }}
             renderItem={(item) => (

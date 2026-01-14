@@ -269,7 +269,7 @@
           "Auth 认证模块"
         ],
         "summary": "Upload Avatar",
-        "description": "上传头像到阿里云 OSS",
+        "description": "上传头像（转换为 Base64 存储）",
         "operationId": "upload_avatar_api_v1_auth_avatar_post",
         "requestBody": {
           "content": {
@@ -298,6 +298,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lesson/all": {
+      "get": {
+        "tags": [
+          "Lesson 教案模块"
+        ],
+        "summary": "Get All Lessons",
+        "description": "获取教师的所有教案（包括正在生成和已生成的）\n\n返回：\n- generating: 正在生成的教案列表（从Redis读取）\n- completed: 已生成的教案列表（从数据库读取）",
+        "operationId": "get_all_lessons_api_v1_lesson_all_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
                 }
               }
             }
@@ -762,101 +789,6 @@
         ]
       }
     },
-    "/api/v1/ai/lesson/clarify/update": {
-      "post": {
-        "tags": [
-          "AI 智能服务模块"
-        ],
-        "summary": "Lesson Clarify Update Api",
-        "description": "直接更新澄清数据\n\n用于前端表单直接提交场景",
-        "operationId": "lesson_clarify_update_api_api_v1_ai_lesson_clarify_update_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LessonClarifyUpdateIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/ai/lesson/clarify/confirm": {
-      "post": {
-        "tags": [
-          "AI 智能服务模块"
-        ],
-        "summary": "Lesson Clarify Confirm Api",
-        "description": "确认澄清完成\n\n将会话状态标记为可生成",
-        "operationId": "lesson_clarify_confirm_api_api_v1_ai_lesson_clarify_confirm_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/ai/lesson/clarify/state": {
       "get": {
         "tags": [
@@ -959,7 +891,7 @@
           "AI 智能服务模块"
         ],
         "summary": "Lesson Generate Api",
-        "description": "触发教案异步生成\n\n返回 task_id，前端通过轮询 /lesson/generate/status 查看进度",
+        "description": "触发教案异步生成（包含确认功能）\n\n支持两种模式：\n1. **对话模式**：通过 session_id 从澄清会话中获取数据\n   - 会自动确认会话并记录 confirm_md_final（可选）\n   - 请求示例：{\"session_id\": \"xxx\", \"confirm_md_final\": \"...\"}\n\n2. **直接模式**：直接提供完整的澄清数据（跳过对话和确认）\n   - 适合需求明确的场景\n   - 请求示例：{\"clarify\": {...}}\n\n返回 task_id，前端通过轮询 /lesson/generate/status 查看进度",
         "operationId": "lesson_generate_api_api_v1_ai_lesson_generate_post",
         "requestBody": {
           "content": {
@@ -1932,10 +1864,10 @@
     "schemas": {
       "AvatarResponse": {
         "properties": {
-          "avatar_url": {
+          "avatar_base64": {
             "type": "string",
-            "title": "Avatar Url",
-            "description": "头像 URL"
+            "title": "Avatar Base64",
+            "description": "头像 Base64 编码"
           },
           "message": {
             "type": "string",
@@ -1945,7 +1877,7 @@
         },
         "type": "object",
         "required": [
-          "avatar_url"
+          "avatar_base64"
         ],
         "title": "AvatarResponse",
         "description": "头像上传响应"
@@ -2693,27 +2625,6 @@
         "type": "object",
         "title": "LessonClarifySchema"
       },
-      "LessonClarifyUpdateIn": {
-        "properties": {
-          "session_id": {
-            "type": "string",
-            "title": "Session Id"
-          },
-          "clarify_data": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Clarify Data",
-            "description": "要更新的澄清数据"
-          }
-        },
-        "type": "object",
-        "required": [
-          "session_id",
-          "clarify_data"
-        ],
-        "title": "LessonClarifyUpdateIn",
-        "description": "教案澄清数据直接更新请求"
-      },
       "LessonCreateIn": {
         "properties": {
           "template_id": {
@@ -2839,6 +2750,18 @@
               }
             ],
             "description": "直接提供的澄清数据"
+          },
+          "confirm_md_final": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Md Final",
+            "description": "用户确认的最终说明（对话模式时提供）"
           },
           "template_id": {
             "anyOf": [
@@ -3273,7 +3196,7 @@
             "type": "string",
             "title": "Role"
           },
-          "avatar_url": {
+          "avatar_base64": {
             "anyOf": [
               {
                 "type": "string"
@@ -3282,7 +3205,7 @@
                 "type": "null"
               }
             ],
-            "title": "Avatar Url"
+            "title": "Avatar Base64"
           },
           "phone": {
             "anyOf": [
